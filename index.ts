@@ -3,6 +3,7 @@ import express from "express";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
 import { UserResolver } from "./resolvers/User";
+import { createConnection } from "typeorm";
 
 const app = express();
 
@@ -12,6 +13,8 @@ const startApp = async () => {
       resolvers: [UserResolver]
     })
   });
+
+  await createConnection();
 
   server.applyMiddleware({ app });
 

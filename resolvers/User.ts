@@ -1,45 +1,12 @@
 import { User } from "./../models/User";
-import {
-  Resolver,
-  Query,
-  Mutation,
-  Arg,
-  InputType,
-  Field,
-  ObjectType
-} from "type-graphql";
+import { Resolver, Query, Mutation, Arg } from "type-graphql";
 import argon2 from "argon2";
 import { validateUserCredentials } from "../utils";
-
-@InputType()
-export class UserRegisterInput {
-  @Field()
-  username: string;
-
-  @Field()
-  password: string;
-
-  @Field()
-  email: string;
-}
-
-@ObjectType()
-class Error {
-  @Field()
-  fieldname: string;
-
-  @Field()
-  message: string;
-}
-
-@ObjectType()
-class UserRegisterResponse {
-  @Field()
-  status: boolean;
-
-  @Field(() => [Error], { nullable: true })
-  errors?: Error[];
-}
+import {
+  UserRegisterResponse,
+  UserRegisterInput,
+  UserLoginResponse
+} from "./types";
 
 @Resolver(User)
 export class UserResolver {
@@ -57,11 +24,39 @@ export class UserResolver {
     return User.find();
   }
 
+  @Mutation(() => UserLoginResponse)
+  async login(
+    @Arg("username") username: string,
+    @Arg("password") password: string
+  ): Promise<UserLoginResponse> {
+    const user = await User.findOne({ where: { username } });
+
+    if (!user) {
+      return {
+        status: false
+      };
+    }
+
+    const isPassValid = await argon2.verify(user.password, password);
+
+    if (!isPassValid) {
+      return {
+        status: false
+      };
+    }
+
+    return {
+      user
+    };
+  }
+
   @Mutation(() => UserRegisterResponse)
   async register(
     @Arg("credentials") credentials: UserRegisterInput
   ): Promise<UserRegisterResponse> {
-    const user = User.find({ where: { username: credentials.username } });
+    const user = await User.findOne({
+      where: { username: credentials.username }
+    });
 
     if (user) {
       return {

@@ -10,6 +10,6 @@ module.exports = merge(common, {
     contentBase: path.join(__dirname, "src", "dist"),
     compress: true,
     port: 3000,
-    historyApiFallback: true,
-  },
+    historyApiFallback: true
+  }
 });
